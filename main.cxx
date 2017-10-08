@@ -6,13 +6,16 @@
 
 #include <chrono>
 
+#define IMAGE_DIR "C:/images/"
+
 int main(int argc, char *argv[])
 {
 
-  const std::string imageFilename = "B:/patient.nrrd", outputFilename = "B:/patient_Resampled_1_1_1_out.nrrd";
+  const std::string imageFilename = std::string(IMAGE_DIR) + "patient.nrrd",
+  outputFilename = std::string(IMAGE_DIR) + "patient_out.nrrd";
 
   ImageType::Pointer image = ImageType::New();
-  agtk::readImage(image, imageFilename);
+  agtk::readImage<ImageType>(image, imageFilename);
   agtk::BinaryImage3D::OffsetType center = { 185, 300, 65 };// { 100,170,100 };
 
   LevelSetOpenCL::staticConstructor();
@@ -28,7 +31,7 @@ int main(int argc, char *argv[])
   output->Allocate();
   output->FillBuffer(0);
 
-  agtk::FloatImage3D::Pointer levelset = agtk::FloatImage3D::New();
+  ImageType::Pointer levelset = ImageType::New();
   levelset->CopyInformation(image);
   levelset->SetRegions(image->GetLargestPossibleRegion());
   levelset->Allocate();
@@ -45,12 +48,12 @@ int main(int argc, char *argv[])
   printExecTime(
     m_Levelset->runLevelSet(itersLS, itersNB, threshold, epsilon, alpha);
   );
-/*
+
   m_Levelset->copyToItk(m_Levelset->m_Levelset, levelset);
   printExecTime(
-    agtk::writeImage(levelset, "B:/levelset.nrrd");
+    agtk::writeImage<ImageType>(levelset, std::string(IMAGE_DIR) + "levelset.nrrd");
   );
-*/
+
   m_Levelset->thresholdLevelSet(0);
   m_Levelset->copyToItk(m_Levelset->m_LevelsetBinary, output);
 
@@ -64,43 +67,3 @@ int main(int argc, char *argv[])
 
   return EXIT_SUCCESS;
 }
-
-//int main(int argc, char *argv[])
-//{
-//
-//  const std::string imageFilename = "B:/0229.nrrd", outputFilename = "B:/0229seg.nrrd";
-//
-//  ImageType::Pointer image = ImageType::New();
-//  agtk::readImage(image, imageFilename);
-//  agtk::BinaryImage3D::OffsetType center = { 139, 225, 203 };
-//
-//
-//  LevelSetNarrowBandCPU::Params params;
-//  ImageType::IndexType centerInd = { center[0], center[1], center[2] };
-//  params.threshold = image->GetPixel(centerInd);
-//  params.epsilon = 90;
-//  params.alpha = 0.04;
-//
-//  auto m_Levelset = new LevelSetNarrowBandCPU(image);
-//  const int radius = 4;
-//  printExecTime(
-//    m_Levelset->initialize(center, radius);
-//  );
-//
-//  m_Levelset->setParams(params);
-//
-//  const int iters = 500;
-//  printExecTime(
-//    m_Levelset->updateLevelSetFunction(iters);
-//  );
-//  
-//  printExecTime(
-//  agtk::writeImage(m_Levelset->getLevelset(), outputFilename);
-//  );
-//
-//  delete m_Levelset;
-//
-//  getchar();
-//
-//  return EXIT_SUCCESS;
-//}
