@@ -13,22 +13,37 @@ find_package(OpenCL REQUIRED)
 
 find_package(Boost REQUIRED)
 
-set(IncSegSourcePath "" CACHE PATH)
+set(IncSegSourcePath "" CACHE PATH "Path to autoplan incremental_segmentation plugin src")
+
+
+include(${IncSegSourcePath}/../write_gpu_kernels.cmake)
+
+set(OpenCLSrcs )
+set(Kernels
+  ${IncSegSourcePath}/HistogramPyramides/HistogramPyramids.cl
+  ${IncSegSourcePath}/Levelset/levelset.cl
+)
+
+write_gpu_kernels( ${OpenCLSrcs} ${Kernels})
 
 include_directories(
 ${Boost_INCLUDE_DIR}
-${Level-Set-Segmentation_INCLUDE_DIR}
+${CMAKE_CURRENT_BINARY_DIR}
 ${IncSegSourcePath}
-${IncSegSourcePath}/OpenCL
 ${IncSegSourcePath}/OpenCLUtilities
-${IncSegSourcePath}/OpenCLUtilityLibrary
+${IncSegSourcePath}/Levelset/
+${IncSegSourcePath}/HistogramPyramides/
 )
 
 add_executable(levelsetSeg 
 main.cxx 
-${IncSegSourcePath}/OpenCL/LevelsetOpenCL.cpp
+${IncSegSourcePath}/Levelset/LevelsetOpenCL.cpp
+${IncSegSourcePath}/Levelset/LevelsetOpenCL.h
+${IncSegSourcePath}/HistogramPyramides/HistogramPyramids.cpp
+${IncSegSourcePath}/HistogramPyramides/HistogramPyramids.hpp
 ${IncSegSourcePath}/OpenCLUtilities/openCLUtilities.cpp
-${IncSegSourcePath}/OpenCLUtilityLibrary/HistogramPyramids.cpp
+${IncSegSourcePath}/OpenCLUtilities/openCLUtilities.hpp
+${OpenCLSrcs}
 )
 
 target_link_libraries(levelsetSeg ${AGTK_LIBRARIES} ${ITK_LIBRARIES})
@@ -36,7 +51,9 @@ target_link_libraries(levelsetSeg ${AGTK_LIBRARIES} ${ITK_LIBRARIES})
 
 add_executable(resizeTest 
 resizeTest.cxx
-${IncSegSourcePath}/OpenCL/LevelsetOpenCL.cpp
+${IncSegSourcePath}/Levelset/LevelsetOpenCL.cpp
+${IncSegSourcePath}/Levelset/LevelsetOpenCL.h
 ${IncSegSourcePath}/OpenCLUtilities/openCLUtilities.cpp
+${IncSegSourcePath}/OpenCLUtilities/openCLUtilities.hpp
 )
 target_link_libraries(resizeTest ${AGTK_LIBRARIES} ${ITK_LIBRARIES})
