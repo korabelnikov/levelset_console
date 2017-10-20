@@ -37,7 +37,9 @@ int main(int argc, char *argv[])
   levelset->Allocate();
   levelset->FillBuffer(0);
 
-  auto m_Levelset = new LevelSetOpenCL(image, output);
+  auto m_Levelset = new LevelSetOpenCL(image, output, output);
+  m_Levelset->updateInput();
+
   const int radius = 5;
   printExecTime(
     m_Levelset->initializeLevelSet(new int[4]{center[0], center[1], center[2]}, radius);
@@ -49,13 +51,13 @@ int main(int argc, char *argv[])
     m_Levelset->runLevelSet(itersLS, itersNB, threshold, epsilon, alpha);
   );
 
-  m_Levelset->copyToItk(m_Levelset->m_Levelset, levelset);
+  m_Levelset->copyToItk(m_Levelset->getLevelset(), levelset);
   printExecTime(
     agtk::writeImage<ImageType>(levelset, std::string(IMAGE_DIR) + "levelset.nrrd");
   );
 
   m_Levelset->thresholdLevelSet(0);
-  m_Levelset->copyToItk(m_Levelset->m_LevelsetBinary, output);
+  m_Levelset->copyToItk(m_Levelset->getLevelsetBinary(), output);
 
   printExecTime(
     agtk::writeImage(output, outputFilename);
