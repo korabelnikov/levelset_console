@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
 
   ImageType::IndexType centerInd = { center[0], center[1], center[2] };
   float threshold = 110;// image->GetPixel(centerInd);
-  float epsilon = 120;
-  float alpha = 0.04;
+  float epsilon = 80;
+  float alpha = 0.010;
 
   agtk::BinaryImage3D::Pointer output = agtk::BinaryImage3D::New();
   output->CopyInformation(image);
@@ -45,24 +45,44 @@ int main(int argc, char *argv[])
     m_Levelset->initializeLevelSet(new int[4]{center[0], center[1], center[2]}, radius);
   );
 
-  const int itersLS = 120;
-  const int itersNB = 10;
+  //debug todo
+  agtk::readImage<ImageType>(levelset, std::string(IMAGE_DIR) + "levelset_bug1.nrrd");
+  m_Levelset->copyFromHost(levelset->GetBufferPointer(), m_Levelset->m_Levelset);
+
+  agtk::readImage<agtk::BinaryImage3D>(output, std::string(IMAGE_DIR) + "activeset_bug1.nrrd");
+  m_Levelset->copyFromHost(output->GetBufferPointer(), m_Levelset->m_ActiveSet);
+  m_Levelset->makeHP();
+  //
+  const int itersLS = 30;
+  const int itersNB = 5;
   printExecTime(
     m_Levelset->runLevelSet(itersLS, itersNB, threshold, epsilon, alpha);
   );
 
-  m_Levelset->copyToItk(m_Levelset->getLevelset(), levelset);
+  m_Levelset->copyToHost(m_Levelset->getLevelset(), levelset->GetBufferPointer());
   printExecTime(
-    agtk::writeImage<ImageType>(levelset, std::string(IMAGE_DIR) + "levelset.nrrd");
+    agtk::writeImage<ImageType>(levelset, std::string(IMAGE_DIR) + "levelset_.nrrd");
   );
 
+  m_Levelset->copyToHost(*m_Levelset->m_ActiveSetTmp, output->GetBufferPointer());
+  agtk::writeImage(output, "C:/images/activesetTmp_.nrrd");
+
+  m_Levelset->copyToHost(*m_Levelset->m_ActiveSet, output->GetBufferPointer());
+  agtk::writeImage(output, "C:/images/activeset_.nrrd");
+
+  m_Levelset->copyToHost(m_Levelset->m_BorderSet, output->GetBufferPointer());
+
+  agtk::writeImage(output, "C:/images/borderset_.nrrd");
+
+  //
+
+
   m_Levelset->thresholdLevelSet(0);
-  m_Levelset->copyToItk(m_Levelset->getLevelsetBinary(), output);
+  m_Levelset->copyToHost(m_Levelset->getLevelsetBinary(), output->GetBufferPointer());
 
   printExecTime(
     agtk::writeImage(output, outputFilename);
   );
-
   delete m_Levelset;
 
   getchar();

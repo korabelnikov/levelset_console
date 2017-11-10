@@ -15,7 +15,7 @@ find_package(Boost REQUIRED)
 
 set(IncSegSourcePath "" CACHE PATH "Path to autoplan incremental_segmentation plugin src")
 
-
+#
 include(${IncSegSourcePath}/../write_gpu_kernels.cmake)
 
 set(OpenCLSrcs )
